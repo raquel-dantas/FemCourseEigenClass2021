@@ -21,7 +21,7 @@ protected:
     // Polynomial order of the integration rule
     int fOrder;
     
-    // Number of integration points for this object
+    // Coordinates of each integration point for this object
     MatrixDouble fPoints;
     
     // Weight of the integration point
