@@ -9,15 +9,45 @@
 #include "IntRuleQuad.h"
 #include "tpanic.h"
 
-IntRuleQuad::IntRuleQuad(){
-}
+IntRuleQuad::IntRuleQuad(){}
 
 IntRuleQuad::IntRuleQuad(int order) {
-    DebugStop();
+    // if(order<0||order>=6) DebugStop();
+    SetOrder(order);
 }
 
 void IntRuleQuad::SetOrder(int order) {
-    DebugStop();
+    if(order<0||order>=6) DebugStop();
+
+    int linepoints = (order+1)/2 + (order+1)%2;
+    int npoints = linepoints*linepoints;
+    fOrder = order;
+    if(npoints==this->NPoints())return;
+
+    fWeights.resize(npoints);
+    fPoints.resize(npoints,2);
+
+    IntRule1d rule_line(order);
+    
+    double wx = 0.;
+    double wy = 0.;
+    VecDouble x(1);
+    VecDouble y(1);
+
+    for(int i = 0; i < linepoints; i++){
+        rule_line.Point(i,x,wx);
+        for(int j = 0; j < linepoints; j++){
+            rule_line.Point(j,y,wy);
+
+            fWeights[linepoints*i + j] = wx * wy;
+            fPoints(linepoints*i + j,0) = x[0];
+            fPoints(linepoints*i + j,1) = y[0];
+        }
+
+    }
+
+
+
 }
 
 void IntRuleQuad::gaulegQuad(const double x1, const double x2, VecDouble &co, VecDouble &w) {
