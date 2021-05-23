@@ -26,12 +26,21 @@ void Shape1d::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, MatrixD
         DebugStop();
     }
     
-    auto nshape = NShapeFunctions(orders);
+    int nshape = NShapeFunctions(orders);
     phi.resize(nshape);
     dphi.resize(1,nshape);
         
-    std::cout << "Please implement me\n";
-    DebugStop();
+    phi[0] = (1. - xi[0]) / 2.;
+    phi[1] = (1. + xi[0]) / 2.;
+
+    // dphi(i,j) represents the ith derivative of function j
+    dphi(0, 0) = -1. / 2.;
+    dphi(0, 1) = 1. / 2.;
+
+    if(orders[2] == 2){
+        phi[2] = 1. - xi[0] * xi[0];
+        dphi(0,2) = -2. * xi[0];
+    }
 }
 
 /// returns the number of shape functions associated with a side
