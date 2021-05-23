@@ -31,9 +31,10 @@ void Geom1d::Shape(const VecDouble &xi, VecDouble &phi, MatrixDouble &dphi)
     phi[0] = (1. - xi[0]) / 2.;
     phi[1] = (1. + xi[0]) / 2.;
 
-    dphi.resize(2, 1);
+    // dphi(i,j) represents the ith derivative of function j
+    dphi.resize(1, 2);
     dphi(0, 0) = -1. / 2.;
-    dphi(1, 0) = 1. / 2.;
+    dphi(0, 1) = 1. / 2.;
 }
 
 void Geom1d::X(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x)
@@ -86,7 +87,7 @@ void Geom1d::GradX(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x, Matr
             x[i] += phi[k] * NodeCo(i, k);
             for (int j = 0; j < masterdim; j++)
             {
-                gradx(i, j) += NodeCo(i, k) * dphi(k, j);
+                gradx(i, j) += NodeCo(i, k) * dphi(j, k);
             }
         }
     }
