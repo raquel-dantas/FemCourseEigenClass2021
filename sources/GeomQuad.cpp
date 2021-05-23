@@ -21,16 +21,47 @@ GeomQuad& GeomQuad::operator=(const GeomQuad& copy) {
 }
 
 void GeomQuad::Shape(const VecDouble &xi, VecDouble &phi, MatrixDouble &dphi) {
-    if(xi.size() != Dimension || phi.size() != nCorners || dphi.rows() != Dimension || dphi.cols() != nCorners) DebugStop();
+    if(xi.size() != Dimension ) DebugStop();
+    phi.resize(nCorners);
+    phi[0] = 1./4.*(1. - xi[0])*(1. - xi[1]);
+    phi[1] = 1./4.*(1. + xi[0])*(1. - xi[1]);
+    phi[2] = 1./4.*(1. + xi[0])*(1. + xi[1]);
+    phi[3] = 1./4.*(1. - xi[0])*(1. + xi[1]);
 
-    DebugStop();
+    // dphi(i,j) represents the ith derivative of function j
+    dphi.resize(Dimension,nCorners);
+    dphi(0,0) = -1./4.*(1. - xi[1]);
+    dphi(1,0) = -1./4.*(1. - xi[0]);
+    dphi(0,1) = 1./4.*(1. - xi[1]);
+    dphi(1,1) = -1./4.*(1. + xi[0]);
+    dphi(0,2) = 1./4.*(1. + xi[1]);
+    dphi(1,2) = 1./4.*(1. + xi[0]);
+    dphi(0,3) = -1./4.*(1. + xi[1]);
+    dphi(1,3) = 1./4.*(1. - xi[0]);
 }
 
 void GeomQuad::X(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x) {
     if(xi.size() != Dimension) DebugStop();
     if(x.size() != NodeCo.rows()) DebugStop();
     if(NodeCo.cols() != nCorners) DebugStop();
-    DebugStop();
+    
+    VecDouble phi;
+    MatrixDouble dphi;
+    Shape(xi, phi, dphi);
+    int nnodes = NumNodes();
+    int dim = NodeCo.rows();
+    x.resize(dim);
+    x.setZero();
+
+    // NodeCo is a matrix dim x Nnodes (3 by 2 for a line). Taking NodeCo(i,j) gives the ith coordinate of the jth node
+
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < nnodes; j++)
+        {
+            x[i] += phi[j] * NodeCo(i, j);
+        }
+    }
 }
 
 void GeomQuad::GradX(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x, MatrixDouble &gradx) {
@@ -38,7 +69,30 @@ void GeomQuad::GradX(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x, Ma
     if(xi.size() != Dimension) DebugStop();
     if(x.size() != NodeCo.rows()) DebugStop();
     if(NodeCo.cols() != nCorners) DebugStop();
-    DebugStop();
+    
+    VecDouble phi;
+    MatrixDouble dphi;
+    Shape(xi, phi, dphi);
+    int nnodes = NumNodes();
+    int masterdim = Dimension;
+    int compdim = NodeCo.rows();
+    x.resize(compdim);
+    x.setZero();
+    gradx.resize(compdim,masterdim);
+    gradx.setZero();
+
+    // NodeCo is a matrix dim x Nnodes (3 by 2 for a line). Taking NodeCo(i,j) gives the ith coordinate of the jth node
+    for (int k = 0; k < nnodes; k++)
+    {
+        for (int i = 0; i < compdim; i++)
+        {
+            x[i] += phi[k] * NodeCo(i, k);
+            for (int j = 0; j < masterdim; j++)
+            {
+                gradx(i, j) += NodeCo(i, k) * dphi(j, k);
+            }
+        }
+    }
 }
 
 void GeomQuad::SetNodes(const VecInt &nodes) {
