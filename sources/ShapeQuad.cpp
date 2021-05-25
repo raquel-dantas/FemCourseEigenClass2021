@@ -50,25 +50,27 @@ void ShapeQuad::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matri
     dphi(1,3) = 1./4.*(1. - xi[0]);
 
     // Quadratic
-    if(nshape > 4){
-        phi[4] = (orders[4] >= 2)*1./2.*(1. - xi[0]*xi[0])*(1. - xi[1]);
-        phi[5] = (orders[5] >= 2)*1./2.*(1. - xi[1]*xi[1])*(1. + xi[0]);
-        phi[6] = (orders[6] >= 2)*1./2.*(1. - xi[0]*xi[0])*(1. + xi[1]);
-        phi[7] = (orders[7] >= 2)*1./2.*(1. - xi[1]*xi[1])*(1. - xi[0]);
-        phi[8] = (orders[8] >= 2)*(1. - xi[0]*xi[0])*(1. - xi[1]*xi[1]);
-
-        dphi(0,4) = (orders[4] >= 2) * xi[0]*(-1. + xi[1]);
-        dphi(1,4) = (orders[4] >= 2) * -1./2.*(1. - xi[0]*xi[0]);
-        dphi(0,5) = (orders[5] >= 2) * 1./2.*(1. - xi[1]*xi[1]);
-        dphi(1,5) = (orders[5] >= 2) * -xi[1]*(1. + xi[0]);
-        dphi(0,6) = (orders[6] >= 2) * -xi[0]*(1. + xi[1]);
-        dphi(1,6) = (orders[6] >= 2) * 1./2.*(1. - xi[0]*xi[0]);
-        dphi(0,7) = (orders[7] >= 2) * -1./2.*(1. - xi[1]*xi[1]);
-        dphi(1,7) = (orders[7] >= 2) * -xi[1]*(1. - xi[0]);
-        dphi(0,8) = (orders[8] >= 2) * -2.*xi[0]*(1. - xi[1]*xi[1]);
-        dphi(1,8) = (orders[8] >= 2) * -2.*xi[1]*(1. - xi[0]*xi[0]);
+    if(nshape > nCorners)
+    {
+        int count = nCorners;
+        for(int jside = nCorners; jside < nSides-1; jside++)
+        {
+            if(orders[jside] >= 2){
+                double a = xi[jside%2];
+                double b = xi[(jside+1)%2];
+                double sign = ((jside+1)%nCorners > 1 ? +1. : -1.);
+                phi[count] = 0.5*(1. - a*a)*(1 + sign*b);
+                dphi(  jside  %2,count) = -a*(1. + sign*b);
+                dphi((jside+1)%2,count) = sign*0.5*(1. - a*a);
+                count++;
+            }
+        }
     }
- 
+    if(orders[nSides - 1] >= 2){
+        phi[8] = (1. - xi[0]*xi[0])*(1. - xi[1]*xi[1]);
+        dphi(0,8) = -2.*xi[0]*(1. - xi[1]*xi[1]);
+        dphi(1,8) = -2.*xi[1]*(1. - xi[0]*xi[0]);
+    }
 }
 
 /// returns the number of shape functions associated with a side

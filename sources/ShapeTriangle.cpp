@@ -48,20 +48,22 @@ void ShapeTriangle::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, M
     dphi(1,2) =  1.;
     
     // Quadratic
-    if(nshape > 3){
-        
-        phi[3] = (orders[3] >= 2) * 4 * phi[0] * phi[1];
-        phi[4] = (orders[4] >= 2) * 4 * phi[1] * phi[2];
-        phi[5] = (orders[5] >= 2) * 4 * phi[0] * phi[2];
-        
-        dphi(0,3) = (orders[4] >= 2) * -4*(-1 + xi[1] + 2*xi[0]);
-        dphi(1,3) = (orders[4] >= 2) * -4*xi[0];
-        dphi(0,4) = (orders[4] >= 2) * 4*xi[1];
-        dphi(1,4) = (orders[4] >= 2) * 4*xi[0];
-        dphi(0,5) = (orders[5] >= 2) * -4*xi[1];
-        dphi(1,5) = (orders[5] >= 2) * -4*(-1 + 2*xi[1] + xi[0]);
-        
-        
+    if(nshape > nCorners)
+    {
+        int count = nCorners;
+        for(int jside = nCorners; jside < nSides - 1; jside++)
+        {
+            int no_anterior = jside - nCorners;
+            int no_posterior = (no_anterior + 1)%nCorners;
+            if(orders[jside] >= 2)
+            {
+                phi[count] = 4*phi[no_anterior]*phi[no_posterior];
+                // Product rule for derivatives
+                dphi(0,count) = 4.*(dphi(0,no_anterior)*phi[no_posterior] + phi[no_anterior]*dphi(0,no_posterior));
+                dphi(1,count) = 4.*(dphi(1,no_anterior)*phi[no_posterior] + phi[no_anterior]*dphi(1,no_posterior));
+                count++;
+            } 
+        }
     }
     
     //Cubic
