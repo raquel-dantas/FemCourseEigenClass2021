@@ -27,7 +27,7 @@ void Geom0d::Shape(const VecDouble &xi, VecDouble &phi, MatrixDouble &dphi) {
 
 void Geom0d::X(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x) {
     if(xi.size() != Dimension) DebugStop();
-    if(x.size() != NodeCo.rows()) DebugStop();
+    if(x.size() < NodeCo.rows()) DebugStop();
     if(NodeCo.cols() != nCorners) DebugStop();
     int nrow = NodeCo.rows();
     for (int i = 0; i < nrow; i++) {
