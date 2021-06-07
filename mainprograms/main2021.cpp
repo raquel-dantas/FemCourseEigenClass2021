@@ -21,6 +21,9 @@ using std::endl;
 using std::cin;
 
 int main (){
-
+    ReadGmsh reader;
+    GeoMesh mesh1;
+    reader.Read(mesh1,"examples/mesh1.msh");
+    VTKGeoMesh::PrintGMeshVTK(&mesh1,"mesh1.vtk");    
     return 0;
 }

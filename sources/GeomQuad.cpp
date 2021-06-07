@@ -50,7 +50,7 @@ void GeomQuad::X(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x) {
     Shape(xi, phi, dphi);
     int nnodes = NumNodes();
     int dim = NodeCo.rows();
-    x.resize(dim);
+    // x.resize(dim);
     x.setZero();
 
     // NodeCo is a matrix dim x Nnodes (3 by 2 for a line). Taking NodeCo(i,j) gives the ith coordinate of the jth node
@@ -76,7 +76,7 @@ void GeomQuad::GradX(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x, Ma
     int nnodes = NumNodes();
     int masterdim = Dimension;
     int compdim = NodeCo.rows();
-    x.resize(compdim);
+    // x.resize(compdim);
     x.setZero();
     gradx.resize(compdim,masterdim);
     gradx.setZero();
