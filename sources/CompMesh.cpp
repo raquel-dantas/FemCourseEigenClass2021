@@ -107,7 +107,7 @@ void CompMesh::SetDOFVec(const std::vector<DOF> &dofvec) {
 
 void CompMesh::SetMathVec(const std::vector<MathStatement *> &mathvec) {
     int c = mathvec.size();
-
+    mathstatements.resize(c);
     for (int i = 0; i < c; i++) {
         mathstatements[i] = mathvec[i];
     }
@@ -119,6 +119,11 @@ void CompMesh::AutoBuild() {
 
     for (i = 0; i < nelem; i++) {
         GeoElement *gel = this->GetGeoMesh()->Element(i);
+        if(!gel)
+        {
+            std::cout << "Null pointer as geometric element\n";
+            DebugStop();
+        }
         CompElement *cel = CreateCompEl(gel, this, i);
         this->SetElement(i, cel);
         this->Resequence();
@@ -136,6 +141,8 @@ void CompMesh::Resequence() {
         int result = nshape * nstate;
         fe += result;
     }
+    solution.resize(fe);
+    solution.setZero();
 }
 
 void CompMesh::Resequence(VecInt &DOFindices) {
