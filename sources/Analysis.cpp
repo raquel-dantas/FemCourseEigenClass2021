@@ -6,10 +6,9 @@
 #include "Analysis.h"
 #include "Assemble.h"
 #include "CompMesh.h"
-#include "CompElement.h"
 #include "GeoMesh.h"
-#include "PostProcess.h"
-#include "tpanic.h"
+#include "CompElement.h"
+#include "GeoElement.h"
 #include "VTKGeoMesh.h"
 #include "PostProcessTemplate.h"
 
@@ -74,8 +73,6 @@ void Analysis::RunSimulation() {
 //    K.Solve_LU(F);
     std::cout << "Solution computed!" << std::endl;
     
-    Solution = F;
-
     int solsize = Solution.rows();
     VecDouble sol(solsize);
     
@@ -99,16 +96,24 @@ VecDouble Analysis::PostProcessError(std::ostream &out, PostProcess &defPostProc
     std::function<void (const VecDouble &loc, VecDouble &result, MatrixDouble & deriv) > fExact;
 
     int64_t nel = cmesh->GetElementVec().size();
+    GeoMesh *gmesh = cmesh->GetGeoMesh();
+    int dim = gmesh->Dimension();
 
     for (int64_t i = 0; i < nel; i++) {
         CompElement *el = cmesh->GetElement(i);
+	GeoElement *gel = el->GetGeoElement();
+	if(gel->Dimension() != dim) continue;
         if (el) {
             if (el->GetStatement()->GetMatID() == 1) {
                 errors.setZero();
                 fExact = defPostProc.GetExact();
                 el->EvaluateError(fExact, errors);
                 int nerrors = errors.size();
-                values.resize(nerrors, 0.);
+                if(values.size() != nerrors)
+                {
+                	values.resize(nerrors);
+                	values.setZero();
+                }
                 for (int ier = 0; ier < nerrors; ier++) {
                     values[ier] += errors[ier] * errors[ier];
                 }

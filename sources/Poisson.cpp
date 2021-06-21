@@ -5,9 +5,10 @@
  */
 
 #include "Poisson.h"
-#include "PostProcess.h"
+///\cond
 #include <functional>
 #include <string.h>
+///\endcond
 
 Poisson::Poisson() {
 }
@@ -91,7 +92,8 @@ int Poisson::NSolutionVariables(const PostProcVar var) {
 }
 
 void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, MatrixDouble &du_exact, VecDouble &errors) const {
-    errors.resize(NEvalErrors(), 0);
+    errors.resize(NEvalErrors());
+    errors.setZero();
     MatrixDouble gradu;
     MatrixDouble axes = data.axes;
 
@@ -120,30 +122,26 @@ void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, MatrixDoub
 }
 
 void Poisson::Contribute(IntPointData &data, double weight, MatrixDouble &EK, MatrixDouble &EF) const {
+
     VecDouble phi = data.phi;
     MatrixDouble dphi = data.dphidx;
     MatrixDouble axes = data.axes;
     MatrixDouble dphi2, dphi3;
 
-    this->Axes2XYZ(dphi, dphi2, axes);
+    dphi2 = data.axes.transpose()*data.dphidx;
     dphi3 = dphi2.transpose();
 
-    int nshape = phi.size();
-    int nstate = this->NState();
-    int dim = dphi.rows();
-
     MatrixDouble perm(3, 3);
-    std::function<void(const VecDouble &co, VecDouble & result) > force;
-
     perm = this->GetPermeability();
-    force = this->GetForceFunction();
+    double res = 0.;
 
-    VecDouble res(nstate);
+    auto force = this->GetForceFunction();
     if(force)
     {
-        force(data.x, res);
+        VecDouble resloc(1);
+        force(data.x, resloc);
+        res = resloc[0];
     }
-
 
     //+++++++++++++++++
     // Please implement me
@@ -159,6 +157,7 @@ void Poisson::PostProcessSolution(const IntPointData &data, const int var, VecDo
     int cols = data.dsoldx.cols();
     MatrixDouble gradu(rows, cols);
     gradu = data.dsoldx;
+    
     int nstate = this->NState();
 
     switch (var) {

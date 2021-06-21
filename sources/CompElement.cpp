@@ -8,8 +8,9 @@
 #include "GeoElement.h"
 #include "MathStatement.h"
 #include "CompMesh.h"
-#include "tpanic.h"
+///\cond
 #include <math.h> 
+///\endcond
 using namespace std;
 
 CompElement::CompElement() {
@@ -194,11 +195,12 @@ void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDoub
     }
 
     int NErrors = material->NEvalErrors();
-    errors.resize(NErrors, 0);
+    errors.resize(NErrors);
+    errors.setZero();
 
 
     IntRule *intrule = this->GetIntRule();
-    int maxIntOrder = 15;
+    int maxIntOrder = intrule->MaxOrder();
     intrule->SetOrder(maxIntOrder);
 
     int dim = Dimension();

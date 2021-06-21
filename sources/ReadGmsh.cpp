@@ -546,7 +546,7 @@ void ReadGmsh::Read4(GeoMesh &gmesh, const std::string &file_name){
                                 std::cout << m_dim_entity_tag_and_physical_tag[entity_dim][entity_tag][i_data] << std::endl;
                             }
                             
-                            std::cout << "Automatically, the assgined pz physical tag = " << physical_identifier << " is used.  The other ones are dropped out." << std::endl;
+                            std::cout << "Automatically, the assigned pz physical tag = " << physical_identifier << " is used.  The other ones are dropped out." << std::endl;
                         }
                         
                         

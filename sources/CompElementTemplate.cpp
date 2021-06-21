@@ -53,6 +53,7 @@ CompElementTemplate<Shape>::CompElementTemplate(int64_t ind, CompMesh *cmesh, Ge
         } else {
             class DOF dof;
             int order = cmesh->GetDefaultOrder();
+            if(i < geo->NCornerNodes()) order = 1;
             int nshape = ComputeNShapeFunctions(i, order);
             int nstate = mat->NState();
             dof.SetNShapeStateOrder(nshape, nstate, order);
@@ -165,7 +166,7 @@ int64_t CompElementTemplate<Shape>::GetDOFIndex(int i) const {
 }
 
 template<class Shape>
-int CompElementTemplate<Shape>::NDOF() const {
+int64_t CompElementTemplate<Shape>::NDOF() const {
     return dofindexes.size();
 }
 
