@@ -175,15 +175,33 @@ void CompElement::CalcStiff(MatrixDouble &ek, MatrixDouble &ef) const {
         std::cout << "Error at CompElement::CalcStiff" << std::endl;
         return;
     }
+    // Configuring size of element matrix
+    int nstate = material->NState();
+    int nshape = NShapeFunctions();
+    ek.resize(nstate*nshape,nstate*nshape);
+    ef.resize(nstate*nshape,1);
     // Second, you should clear the matrices you're going to compute
     ek.setZero();
     ef.setZero();
+    // Structure to store all data of a specific integration point
+    IntPointData pointdata;
+    InitializeIntPointData(pointdata);
 
-    //+++++++++++++++++
-    // Please implement me
-    std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-    DebugStop();
-    //+++++++++++++++++
+    // Get Gaussian quadrature 
+    IntRule* quadrature = GetIntRule();
+    int npoints = quadrature->NPoints();
+
+    // Loop over all integration points
+    for(int p = 0; p < npoints; p++){
+        // Parametric coordinates and weight of the integration point of index p
+        VecDouble xi(Dimension());
+        quadrature->Point(p,xi,pointdata.weight);
+        // Compute all data required at the current intregation point
+        ComputeRequiredData(pointdata, xi);
+        // Compute one weighted contribution of the current integration point
+        material->Contribute(pointdata, pointdata.weight, ek, ef);
+    }
+    std::cout << ek;   
 }
 
 void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDouble &val, MatrixDouble &deriv) > fp, VecDouble &errors) const {
