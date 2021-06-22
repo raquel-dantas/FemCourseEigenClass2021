@@ -56,45 +56,62 @@ void L2Projection::SetProjectionMatrix(const MatrixDouble &proj) {
 }
 
 void L2Projection::Contribute(IntPointData &data, double weight, MatrixDouble &EK, MatrixDouble &EF) const {
-
+    // Get number of state variables
     int nstate = this->NState();
     if(nstate != 1)
     {
         std::cout << "Please implement me\n";
         DebugStop();
     }
+    // Get number of shape functions
     auto nshape = data.phi.size();
-    if(EK.rows() != nshape || EF.rows() != nshape)
+    if(EK.rows() != nstate*nshape || EF.rows() != nstate*nshape)
     {
         DebugStop();
     }
+    // Get the value of the user defined BC
+    VecDouble bc_value(nstate);
+    bc_value[0] = Val2()(0,0);
 
-    VecDouble result(nstate);
-    result[0] = Val2()(0,0);
-    MatrixDouble deriv(data.x.size(), nstate);
-    deriv.setZero();
-    
+    // If exact solution is known, BCs are whatever we compute from it
+    MatrixDouble gradu_exact(data.x.size(), nstate);
+    gradu_exact.setZero();
     if(SolutionExact)
     {
-        SolutionExact(data.x, result, deriv);
+        SolutionExact(data.x, bc_value, gradu_exact);
+        // if(GetBCType() == EBCType::Neumann){
+        //     MatrixDouble flux_exact = perm * gradu_exact;
+        //     double normal_flux = Inner(flux_exact,normal_vector);
+        //     bc_value[0] = normal_flux;
+        // }
     }
-
-    //+++++++++++++++++
-    // Please implement me
-    std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-    DebugStop();
+    // Get data (shape functions) from the integration point
+    VecDouble& phi = data.phi;
 
     switch (this->GetBCType()) {
 
-        case 0:
+        case 0://Dirichlet
         {
-            // Your code here
+            int nrows = EK.rows();
+            int ncols = EK.cols();
+            // BCs are taken in the form of boundary integrals
+            for(int i = 0; i < nrows; i++){
+                // Bignumber because of panalty method
+                EF(i,0) += gBigNumber * data.weight * data.detjac * phi[i] * bc_value[0];
+                for(int j = 0; j < ncols; j++){
+                    EK(i,j) += gBigNumber * data.weight * data.detjac * phi[i] * phi[j];
+                }
+            }
             break;
         }
 
-        case 1:
+        case 1://Neumann
         {
-            // Your code here
+            // BCs are taken in the form of boundary integrals
+            int nrows = EK.rows();
+            for(int i = 0; i < nrows; i++){
+                EF(i,0) += data.weight * data.detjac * phi[i] * bc_value[0];  
+            } 
             break;
         }
 
@@ -160,21 +177,21 @@ void L2Projection::PostProcessSolution(const IntPointData &data, const int var, 
 
         case 1: //ESol
         {
-            //+++++++++++++++++
-            // Please implement me
-            std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-            DebugStop();
-            //+++++++++++++++++
+            Solout.resize(nstate);
+            for (int i = 0; i < nstate; i++) {
+                Solout[i] = data.solution[i];
+            }
         }
             break;
 
         case 2: //EDSol
         {
-            //+++++++++++++++++
-            // Please implement me
-            std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-            DebugStop();
-            //+++++++++++++++++
+           Solout.resize(rows*cols);
+            for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Solout[cols*i+j] = data.dsoldx.coeff(i,j);
+            }
+            }
         }
             break;
 
