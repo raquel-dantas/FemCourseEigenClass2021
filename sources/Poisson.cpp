@@ -122,32 +122,39 @@ void Poisson::ContributeError(IntPointData &data, VecDouble &u_exact, MatrixDoub
 }
 
 void Poisson::Contribute(IntPointData &data, double weight, MatrixDouble &EK, MatrixDouble &EF) const {
-
-    VecDouble phi = data.phi;
-    MatrixDouble dphi = data.dphidx;
-    MatrixDouble axes = data.axes;
-    MatrixDouble dphi2, dphi3;
-
-    dphi2 = data.axes.transpose()*data.dphidx;
-    dphi3 = dphi2.transpose();
-
-    MatrixDouble perm(3, 3);
-    perm = this->GetPermeability();
-    double res = 0.;
-
+    // Get data (shape functions and gradiaent of these shape functions) from the integration current point
+    VecDouble& phi = data.phi;
+    MatrixDouble& dphi = data.dphidx;
+    // Permeability tensor from variational statement 
+    MatrixDouble perm = this->GetPermeability();
+    // Force function / Source function
+    double f = 0.;
     auto force = this->GetForceFunction();
     if(force)
     {
         VecDouble resloc(1);
         force(data.x, resloc);
-        res = resloc[0];
+        f = resloc[0];
     }
 
-    //+++++++++++++++++
-    // Please implement me
-    std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-    DebugStop();
-    //+++++++++++++++++
+    // Contribution on the element stiffiness matrix
+    int nrows = EK.rows();
+    int ncols = EK.cols();
+    for(int i = 0; i < nrows; i++){
+        // Gradient of shape functions
+        MatrixDouble gradphi_i = dphi.col(i);
+        // Flux = permeability * grad u
+        MatrixDouble flux = perm*gradphi_i;
+        for(int j = 0; j < ncols; j++){
+            MatrixDouble gradphi_j = dphi.col(j);
+            EK(i,j) += data.weight * data.detjac * Inner(flux, gradphi_j);
+        }
+    }
+    // Contribution on the element load vector
+    for(int i = 0; i < nrows; i++){
+        EF(i,0) += data.weight * data.detjac * phi[i] * f;  
+    } 
+
 }
 
 void Poisson::PostProcessSolution(const IntPointData &data, const int var, VecDouble &Solout) const {
@@ -170,20 +177,22 @@ void Poisson::PostProcessSolution(const IntPointData &data, const int var, VecDo
         case 1: //ESol
         {
             //+++++++++++++++++
-            // Please implement me
-            std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-            DebugStop();
+            Solout.resize(nstate);
+            for (int i = 0; i < nstate; i++) {
+                Solout[i] = data.solution[i];
+            }
             //+++++++++++++++++
         }
             break;
 
         case 2: //EDSol
         {
-            //+++++++++++++++++
-            // Please implement me
-            std::cout << "\nPLEASE IMPLEMENT ME\n" << __PRETTY_FUNCTION__ << std::endl;
-            DebugStop();
-            //+++++++++++++++++
+            Solout.resize(rows*cols);
+            for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Solout[cols*i+j] = data.dsoldx.coeff(i,j);
+            }
+            }
         }
             break;
         case 3: //EFlux
