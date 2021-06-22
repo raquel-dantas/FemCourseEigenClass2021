@@ -14,7 +14,7 @@ Curve Loop(1) = {1,2,3,4};
 Surface(1) = {1};
 
 // To get structured triangular mesh 
-Transfinite Curve{:} = 10;
+Transfinite Curve{:} = 3;
 Transfinite Surface{:};
 
 //  To get structured quadilaterals
