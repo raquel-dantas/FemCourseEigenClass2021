@@ -11,6 +11,8 @@
 #include "GeoElement.h"
 #include "VTKGeoMesh.h"
 #include "PostProcessTemplate.h"
+#include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -80,6 +82,10 @@ void Analysis::RunSimulation() {
         sol[i] = Solution(i, 0);
     }
     cmesh->LoadSolution(sol);
+    std::filesystem::create_directory("LOG");
+    std::ofstream logfile("LOG/result.log");
+    logfile << sol<<'\n'<<'\n';
+    logfile << K << '\n'<<'\n' << F;
 }
 
 void Analysis::PostProcessSolution(const std::string &filename, PostProcess &defPostProc) const {
