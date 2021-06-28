@@ -201,7 +201,7 @@ void CompElement::CalcStiff(MatrixDouble &ek, MatrixDouble &ef) const {
         // Compute one weighted contribution of the current integration point
         material->Contribute(pointdata, pointdata.weight, ek, ef);
     }
-    std::cout << ek;   
+    // std::cout << ek <<"\n\n";   
 }
 
 void CompElement::EvaluateError(std::function<void(const VecDouble &loc, VecDouble &val, MatrixDouble &deriv) > fp, VecDouble &errors) const {
