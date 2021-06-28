@@ -42,7 +42,7 @@ void Geom1d::X(const VecDouble &xi, MatrixDouble &NodeCo, VecDouble &x)
     if(NodeCo.rows() <= 0 || NodeCo.rows() > 3) {DebugStop();}
     if(NodeCo.cols() <= 0 || NodeCo.cols() > NumNodes()) {DebugStop();}
     int dim = NodeCo.rows();
-    if (x.size() <= 0 || x.size() > dim) {DebugStop();}
+    if (x.size() <= 0 /*|| x.size() > dim*/) {DebugStop();}
     
     VecDouble phi;
     MatrixDouble dphi;
