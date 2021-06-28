@@ -24,51 +24,65 @@ using std::cin;
 // Constant forcing function
 void force(const VecDouble& x, VecDouble& result){
     result.resize(1);
-    result[0] = 1;
+    // result[0] = (M_PI * M_PI)/2. * std::cos(M_PI * x[0]/2.) * std::cos(M_PI * x[1]/2.);
+    result[0] = 2*(M_PI * M_PI) * std::sin(M_PI * x[0]) * std::sin(M_PI * x[1]);
 }
+// Exact solution
+void exactsol(const VecDouble& x, VecDouble& u, MatrixDouble& gradu);
 
 int main (){
     // Setup of mesh reader
     ReadGmsh reader;
     // Geometric mesh
-    GeoMesh mesh1;
+    GeoMesh gmesh;
     // Read mesh file from gmsh
-    reader.Read(mesh1,"examples/mesh1.msh");
+    reader.Read(gmesh,"examples/mesh_bc3.msh");
     // Print geometric mesh for verification
-    VTKGeoMesh::PrintGMeshVTK(&mesh1,"mesh1.vtk");
+    VTKGeoMesh::PrintGMeshVTK(&gmesh,"gmesh_bc.vtk");
     // Computational mesh created from geometrical mesh
-    CompMesh cmesh(&mesh1);
+    CompMesh cmesh(&gmesh);
 
     // Permeability tensor for Poisson problem
     MatrixDouble perm(2,2);
     perm.setIdentity();
     // Create a variational formulation
-    Poisson *varform = new Poisson(1, perm);
-    // Set variational formulation into mesh
-    cmesh.SetMathStatement(1, varform);
+    Poisson *varform = new Poisson(0, perm);
     // Add forcing function to variational formulation
     varform->SetForceFunction(force);
+    // Create a BC
+    MatrixDouble proj(1,1),val1(1,1),val2(1,1);
+        proj.setZero();
+        val1.setZero();
+        val2.setZero();
+        val2(0,0) = 16;
+    L2Projection *bc = new L2Projection(0,1,proj,val1,val2);
+    bc->SetExactSolution(exactsol);
+    // Set variational formulation into mesh
+    std::vector<MathStatement*> ms {varform,bc};
+    cmesh.SetMathVec(ms);
 
     // Create computational elements and setup approximation space
     cmesh.AutoBuild();
     cmesh.Resequence();
 
+
+    // Analysis 
+    Analysis an(&cmesh);
+    an.RunSimulation();
+
     // Print computational mesh for verification
-    VTKGeoMesh::PrintCMeshVTK(&cmesh, 2,"mesh1.vtk");
+    VTKGeoMesh::PrintCMeshVTK(&cmesh, 2,"result.vtk");
 
-
-    // Compute element stiffness matrices
-    int nelements = cmesh.GetElementVec().size();
-    MatrixDouble ek;
-    MatrixDouble ef;
-    for(int i=0; i < nelements; i++){
-        CompElement* ei = cmesh.GetElement(i);
-        ei->CalcStiff(ek,ef);
-        VecDouble t(4);
-        t.setConstant(1);
-        std::cout << '\n' << ek*t << '\n';    
-    }
-
-    
     return 0;
+}
+
+
+
+
+void exactsol(const VecDouble& x, VecDouble& u, MatrixDouble& gradu){
+    u.resize(1);
+    u[0] = std::sin(M_PI * x[0]) * std::sin(M_PI * x[1]);
+    gradu.resize(2,1);
+    gradu(0,0) = M_PI * std::cos(M_PI * x[0]) * std::sin(M_PI * x[1]);
+    gradu(0,0) = M_PI * std::cos(M_PI * x[1]) * std::sin(M_PI * x[0]);
 }
